@@ -7,6 +7,8 @@ import folder_paths
 import time
 from comfy.cli_args import args
 
+from PIL import Image, ImageOps
+
 
 def execute_prestartup_script():
     def execute_script(script_path):
@@ -174,7 +176,15 @@ def hijack_progress(server):
             filepath = os.path.join(folderpath, f"step-{value}.png")
             print(f"Saving preview image to '{filepath}'")
             img = preview_image[1]
+            max_size = preview_image[2]
+            if hasattr(Image, 'Resampling'):
+                resampling = Image.Resampling.BILINEAR
+            else:
+                resampling = Image.ANTIALIAS
+
+            img = ImageOps.contain(img, (max_size, max_size), resampling)
             img.save(filepath)
+            print(f"\hijack_progress.Preview Image WxH: {img.width}x{img.height}")
             server.send_sync(BinaryEventTypes.UNENCODED_PREVIEW_IMAGE, preview_image, server.client_id)
     comfy.utils.set_progress_bar_global_hook(hook)
 
