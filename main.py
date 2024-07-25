@@ -163,9 +163,18 @@ def hijack_progress(server):
     def hook(value, total, preview_image):
         comfy.model_management.throw_exception_if_processing_interrupted()
         progress = {"value": value, "max": total, "prompt_id": server.last_prompt_id, "node": server.last_node_id}
+        print("HIJACK_PROGRESS!!!!!")
+        print(progress)
 
         server.send_sync("progress", progress, server.client_id)
         if preview_image is not None:
+            folderpath = f"C:/AI/tmp/{server.last_prompt_id}-{server.last_node_id}"
+            if not os.path.exists(folderpath):
+                os.makedirs(folderpath)
+            filepath = os.path.join(folderpath, f"step-{value}.png")
+            print(f"Saving preview image to '{filepath}'")
+            img = preview_image[1]
+            img.save(filepath)
             server.send_sync(BinaryEventTypes.UNENCODED_PREVIEW_IMAGE, preview_image, server.client_id)
     comfy.utils.set_progress_bar_global_hook(hook)
 
